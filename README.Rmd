@@ -57,6 +57,7 @@ I used Gain & Lift charts to connect the best performing model to business goals
 ### Recommendations
 
 I recommend:
+
 - Iteratively improving the model over time with:
   - additional features
   - additional observations
@@ -68,9 +69,9 @@ I recommend:
 ```{r}
 rct_tbl <- rct_raw_tbl %>% 
     mutate(recipe = factor(recipe),
-           high_traffic = ifelse(is.na(high_traffic), "Not-High", high_traffic) %>% as_factor(),
+           high_traffic = ifelse(is.na(high_traffic), "Not-High", high_traffic) %>% as_factor,
            servings = servings %>% str_remove_all("\\s+as\\s+a\\s+snack$") %>% as.integer,
-           category = factor(category))
+           category = category %>% str_remove_all("\\s+Breast$") %>% as_factor())
 
 rct_tbl %>% glimpse()
 ```
@@ -370,7 +371,7 @@ grid_results <-
    workflow_map(
       seed = 234,
       resamples = folds,
-      grid = 20,
+      grid = 10,
       control = grid_ctrl,
       metrics = metric_set(roc_auc, pr_auc)
    )
@@ -675,6 +676,7 @@ I used Gain & Lift charts to connect the best performing model to business goals
 ### Recommendations
 
 I recommend:
+
 - Iteratively improving the model over time with:
   - additional features
   - additional observations

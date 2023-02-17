@@ -77,10 +77,10 @@ library(tidyverse)
 ```
 
     ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-    ## ✔ ggplot2 3.4.0      ✔ purrr   0.3.5 
-    ## ✔ tibble  3.1.8      ✔ dplyr   1.0.10
-    ## ✔ tidyr   1.2.1      ✔ stringr 1.4.1 
-    ## ✔ readr   2.1.3      ✔ forcats 0.5.2 
+    ## ✔ ggplot2 3.4.0     ✔ purrr   1.0.1
+    ## ✔ tibble  3.1.8     ✔ dplyr   1.1.0
+    ## ✔ tidyr   1.3.0     ✔ stringr 1.5.0
+    ## ✔ readr   2.1.3     ✔ forcats 1.0.0
     ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
     ## ✖ dplyr::filter() masks stats::filter()
     ## ✖ dplyr::lag()    masks stats::lag()
@@ -90,12 +90,12 @@ library(tidymodels)
 ```
 
     ## ── Attaching packages ────────────────────────────────────── tidymodels 1.0.0 ──
-    ## ✔ broom        1.0.1     ✔ rsample      1.1.0
+    ## ✔ broom        1.0.3     ✔ rsample      1.1.1
     ## ✔ dials        1.1.0     ✔ tune         1.0.1
-    ## ✔ infer        1.0.3     ✔ workflows    1.1.2
-    ## ✔ modeldata    1.0.1     ✔ workflowsets 1.0.0
+    ## ✔ infer        1.0.4     ✔ workflows    1.1.2
+    ## ✔ modeldata    1.1.0     ✔ workflowsets 1.0.0
     ## ✔ parsnip      1.0.3     ✔ yardstick    1.1.0
-    ## ✔ recipes      1.0.3     
+    ## ✔ recipes      1.0.4     
     ## ── Conflicts ───────────────────────────────────────── tidymodels_conflicts() ──
     ## ✖ scales::discard() masks purrr::discard()
     ## ✖ dplyr::filter()   masks stats::filter()
@@ -103,7 +103,7 @@ library(tidymodels)
     ## ✖ dplyr::lag()      masks stats::lag()
     ## ✖ yardstick::spec() masks readr::spec()
     ## ✖ recipes::step()   masks stats::step()
-    ## • Search for functions across packages at https://www.tidymodels.org/find/
+    ## • Use tidymodels_prefer() to resolve common conflicts.
 
 ``` r
 library(ggrepel)
@@ -182,20 +182,23 @@ of the “High” traffic recipes, a 15% improvement over the baseline of
 
 ### Recommendations
 
-I recommend: - Iteratively improving the model over time with: -
-additional features - additional observations - screening more models
-and preprocessing techniques - Utilize the current model as it’s shown
-to meet targets and provide business value, time to put the model into
-production.
+I recommend:
+
+- Iteratively improving the model over time with:
+  - additional features
+  - additional observations
+  - screening more models and preprocessing techniques
+- Utilize the current model as it’s shown to meet targets and provide
+  business value, time to put the model into production.
 
 ## Data Validation
 
 ``` r
 rct_tbl <- rct_raw_tbl %>% 
     mutate(recipe = factor(recipe),
-           high_traffic = ifelse(is.na(high_traffic), "Not-High", high_traffic) %>% as_factor(),
+           high_traffic = ifelse(is.na(high_traffic), "Not-High", high_traffic) %>% as_factor,
            servings = servings %>% str_remove_all("\\s+as\\s+a\\s+snack$") %>% as.integer,
-           category = factor(category))
+           category = category %>% str_remove_all("\\s+Breast$") %>% as_factor())
 
 rct_tbl %>% glimpse()
 ```
@@ -453,11 +456,6 @@ useful in predicting traffic.
 vis_miss(rct_tbl %>% arrange(calories))
 ```
 
-    ## Warning: `gather_()` was deprecated in tidyr 1.2.0.
-    ## ℹ Please use `gather()` instead.
-    ## ℹ The deprecated feature was likely used in the visdat package.
-    ##   Please report the issue at <]8;;https://github.com/ropensci/visdat/issueshttps://github.com/ropensci/visdat/issues]8;;>.
-
 ![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 As we can see from the visualization the missing values among the
@@ -603,7 +601,7 @@ grid_results <-
    workflow_map(
       seed = 234,
       resamples = folds,
-      grid = 20,
+      grid = 10,
       control = grid_ctrl,
       metrics = metric_set(roc_auc, pr_auc)
    )
@@ -665,16 +663,16 @@ grid_results %>% rank_results(select_best = TRUE)
     ## # A tibble: 10 × 9
     ##    wflow_id         .config      .metric  mean std_err     n prepr…¹ model  rank
     ##    <chr>            <chr>        <chr>   <dbl>   <dbl> <int> <chr>   <chr> <int>
-    ##  1 naomit_glmnet    Preprocesso… pr_auc  0.875  0.0135    10 recipe  logi…     1
-    ##  2 naomit_glmnet    Preprocesso… roc_auc 0.823  0.0155    10 recipe  logi…     1
-    ##  3 baseline_xgboost Preprocesso… pr_auc  0.876  0.0137    10 recipe  boos…     2
-    ##  4 baseline_xgboost Preprocesso… roc_auc 0.821  0.0170    10 recipe  boos…     2
-    ##  5 baseline_glmnet  Preprocesso… pr_auc  0.885  0.0110    10 recipe  logi…     3
-    ##  6 baseline_glmnet  Preprocesso… roc_auc 0.820  0.0136    10 recipe  logi…     3
-    ##  7 xgb_rec_xgboost  Preprocesso… pr_auc  0.849  0.0166    10 recipe  boos…     4
-    ##  8 xgb_rec_xgboost  Preprocesso… roc_auc 0.793  0.0178    10 recipe  boos…     4
-    ##  9 naomit_xgboost   Preprocesso… pr_auc  0.836  0.0176    10 recipe  boos…     5
-    ## 10 naomit_xgboost   Preprocesso… roc_auc 0.782  0.0177    10 recipe  boos…     5
+    ##  1 baseline_glmnet  Preprocesso… pr_auc  0.881  0.0121    10 recipe  logi…     1
+    ##  2 baseline_glmnet  Preprocesso… roc_auc 0.823  0.0156    10 recipe  logi…     1
+    ##  3 naomit_glmnet    Preprocesso… pr_auc  0.876  0.0130    10 recipe  logi…     2
+    ##  4 naomit_glmnet    Preprocesso… roc_auc 0.822  0.0160    10 recipe  logi…     2
+    ##  5 baseline_xgboost Preprocesso… pr_auc  0.879  0.0130    10 recipe  boos…     3
+    ##  6 baseline_xgboost Preprocesso… roc_auc 0.821  0.0166    10 recipe  boos…     3
+    ##  7 xgb_rec_xgboost  Preprocesso… pr_auc  0.846  0.0152    10 recipe  boos…     4
+    ##  8 xgb_rec_xgboost  Preprocesso… roc_auc 0.784  0.0171    10 recipe  boos…     4
+    ##  9 naomit_xgboost   Preprocesso… pr_auc  0.833  0.0174    10 recipe  boos…     5
+    ## 10 naomit_xgboost   Preprocesso… roc_auc 0.779  0.0181    10 recipe  boos…     5
     ## # … with abbreviated variable name ¹​preprocessor
 
 Scoring a PR AUC of 0.881 and a ROC AUC of 0.8228, the baseline model
@@ -727,14 +725,14 @@ baseline_model_test_results %>%
 
 | model   | .metric             | .estimate |
 |:--------|:--------------------|----------:|
-| glmnet  | precision           | 0.7096774 |
-| glmnet  | false_positive_rate | 0.5625000 |
-| glmnet  | pr_auc              | 0.9091462 |
-| glmnet  | roc_auc             | 0.8530954 |
+| glmnet  | precision           | 0.8041958 |
+| glmnet  | false_positive_rate | 0.2916667 |
+| glmnet  | pr_auc              | 0.9116228 |
+| glmnet  | roc_auc             | 0.8611480 |
 | xgboost | precision           | 0.8041958 |
 | xgboost | false_positive_rate | 0.2916667 |
-| xgboost | pr_auc              | 0.9002720 |
-| xgboost | roc_auc             | 0.8594858 |
+| xgboost | pr_auc              | 0.8993075 |
+| xgboost | roc_auc             | 0.8564569 |
 
 At the default classification threshold, both models scored a Precision
 of 0.8042 on never before seen data, so both models meet the request to
@@ -783,6 +781,14 @@ baseline_model_test_results %>%
         linetype = "ROC AUC"
     )
 ```
+
+    ## Warning: Returning more (or less) than 1 row per `summarise()` group was deprecated in
+    ## dplyr 1.1.0.
+    ## ℹ Please use `reframe()` instead.
+    ## ℹ When switching from `summarise()` to `reframe()`, remember that `reframe()`
+    ##   always returns an ungrouped data frame and adjust accordingly.
+    ## ℹ The deprecated feature was likely used in the yardstick package.
+    ##   Please report the issue at <]8;;https://github.com/tidymodels/yardstick/issueshttps://github.com/tidymodels/yardstick/issues]8;;>.
 
 ![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
@@ -848,16 +854,16 @@ glmnet_pred_tbl %>% head(10) %>%
 
 | Actual Value | Predicted Value | High Probability |
 |:-------------|:----------------|:-----------------|
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
-| High         | High            | 82.80%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
+| High         | High            | 92.64%           |
 
 ### Explaining Gain/Lift
 
@@ -1020,8 +1026,11 @@ of the “High” traffic recipes, a 15% improvement over the baseline of
 
 ### Recommendations
 
-I recommend: - Iteratively improving the model over time with: -
-additional features - additional observations - screening more models
-and preprocessing techniques - Utilize the current model as it’s shown
-to meet targets and provide business value, time to put the model into
-production.
+I recommend:
+
+- Iteratively improving the model over time with:
+  - additional features
+  - additional observations
+  - screening more models and preprocessing techniques
+- Utilize the current model as it’s shown to meet targets and provide
+  business value, time to put the model into production.
